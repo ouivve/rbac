@@ -69,7 +69,6 @@ const authGuard: Handle = async ({ event, resolve }) => {
 	event.locals.session = session;
 	event.locals.user = user;
 
-	// 현재 사용자의 역할 확인 (로그인하지 않은 경우 'guest')
 	let userRole = 'guest' as UserRole;
 
 	if (session?.user) {
@@ -84,11 +83,16 @@ const authGuard: Handle = async ({ event, resolve }) => {
 
 	const path = event.url.pathname;
 
-	// 현재 경로에 대한 접근 권한 확인
+	console.log('Current path:', path);
+	console.log('User role:', userRole);
+	console.log('Is path allowed:', isPathAllowed(path, userRole));
+
 	if (!isPathAllowed(path, userRole)) {
 		const redirectPath = getRedirectPath(path, userRole);
+		console.log('Redirect path:', redirectPath);
+		
 		if (redirectPath) {
-			redirect(303, redirectPath);
+			throw redirect(303, redirectPath);
 		}
 	}
 

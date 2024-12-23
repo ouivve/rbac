@@ -8,23 +8,32 @@ type RouteConfig = {
 };
 
 export const routeConfig: RouteConfig = {
+	// 모든 사용자가 접근 가능한 페이지
 	'/': {
 		roles: ['admin', 'user', 'guest']
 	},
+	// 로그인 전 접근 가능한 페이지
 	'/auth': {
 		roles: ['guest'],
 		redirectTo: '/mypage'
 	},
+	// 로그인 후 접근 가능한 페이지
 	'/mypage': {
 		roles: ['admin', 'user'],
 		redirectTo: '/auth'
 	},
-	'/dashboard': {
-		roles: ['admin'],
-		redirectTo: '/auth'
-	},
 	'/logout': {
 		roles: ['admin', 'user'],
+		redirectTo: '/auth?logout=success'
+	},
+	// 에디터 페이지
+	'/editor': {
+		roles: ['admin', 'user'],
+		redirectTo: '/auth'
+	},
+	// 관리자 페이지
+	'/dashboard': {
+		roles: ['admin'],
 		redirectTo: '/auth'
 	}
 };
@@ -41,14 +50,19 @@ export function getRedirectPath(path: string, userRole: UserRole): string | null
 	if (!hasRouteConfig(path)) return null;
 
 	const config = getRouteConfig(path);
-	return !config.roles.includes(userRole) ? config.redirectTo || '/' : null;
+	if (!config.roles.includes(userRole)) {
+		return config.redirectTo || '/';
+	}
+	return null;
 }
 
 function hasRouteConfig(path: string): boolean {
-	return Object.keys(routeConfig).some((pattern) => path.startsWith(pattern));
+	return Object.keys(routeConfig).includes(path);
 }
 
 function getRouteConfig(path: string): RouteConfig[string] {
-	const pattern = Object.keys(routeConfig).find((p) => path.startsWith(p));
-	return pattern ? routeConfig[pattern] : { roles: ['admin', 'user', 'guest'] };
+	if (!routeConfig[path]) {
+		throw new Error(`No route config found for path: ${path}`);
+	}
+	return routeConfig[path];
 }

@@ -1,6 +1,8 @@
 <script lang="ts">
 	import '../app.css';
 	import { invalidate } from '$app/navigation';
+	import { page } from '$app/stores';
+	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { navigationItems } from '$lib/config/navigation';
 	import type { UserRole } from '$lib/types/auth';
@@ -9,14 +11,34 @@
 	let { session, supabase, user } = $derived(data);
 	let userRole = $derived((user?.role || 'guest') as UserRole);
 
-	onMount(() => {
-		const { data } = supabase.auth.onAuthStateChange((_, newSession) => {
-			if (newSession?.expires_at !== session?.expires_at) {
-				invalidate('supabase:auth');
-			}
-		});
+	let { url } = $derived($page);
 
-		return () => data.subscription.unsubscribe();
+	$effect(() => {
+		console.log('url', url);
+		console.log('session', session);
+		console.log('user', user);
+		console.log('userRole', userRole);
+		if (url.searchParams.get('logout')) {
+			(async () => {
+				await invalidate('supabase:auth');
+				data = {
+					...data,
+					session: null,
+					user: null
+				};
+				await goto('/auth', { replaceState: true });
+			})();
+		}
+	});
+
+	$effect(() => {
+		if (!session) {
+			data = {
+				...data,
+				session: null,
+				user: null
+			};
+		}
 	});
 </script>
 

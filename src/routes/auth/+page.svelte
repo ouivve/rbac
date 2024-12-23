@@ -1,4 +1,3 @@
-<!-- Start of Selection -->
 <form method="POST" action="?/login" class="flex flex-col space-y-4 rounded bg-white p-4 shadow-md">
 	<label class="flex flex-col">
 		<span class="font-semibold">Email</span>
@@ -15,4 +14,3 @@
 		>
 	</div>
 </form>
-<!-- End of Selection -->
