@@ -1,9 +1,10 @@
 import type { UserRole } from '$lib/types/auth';
 
-type RouteConfig = {
+export type RouteConfig = {
 	[path: string]: {
 		roles: UserRole[];
 		redirectTo?: string;
+		logoutRedirect?: boolean;
 	};
 };
 
@@ -15,7 +16,8 @@ export const routeConfig: RouteConfig = {
 	// 로그인 전 접근 가능한 페이지
 	'/auth': {
 		roles: ['guest'],
-		redirectTo: '/mypage'
+		redirectTo: '/mypage',
+		logoutRedirect: true
 	},
 	// 로그인 후 접근 가능한 페이지
 	'/mypage': {
@@ -65,4 +67,8 @@ function getRouteConfig(path: string): RouteConfig[string] {
 		throw new Error(`No route config found for path: ${path}`);
 	}
 	return routeConfig[path];
+}
+
+export function getLogoutRedirectPath(): string {
+	return '/auth?logout=success';
 }
