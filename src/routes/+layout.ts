@@ -35,9 +35,20 @@ export const load: LayoutLoad = async ({ data, depends, fetch }) => {
 		data: { session }
 	} = await supabase.auth.getSession();
 
-	const {
-		data: { user }
-	} = await supabase.auth.getUser();
+	let user = null;
+	if (session?.user) {
+		// profiles 테이블에서 role 정보 가져오기
+		const { data: profile } = await supabase
+			.from('profiles')
+			.select('role')
+			.eq('id', session.user.id)
+			.single();
+
+		user = {
+			...session.user,
+			role: profile?.role || 'user'
+		};
+	}
 
 	return { session, supabase, user };
 };

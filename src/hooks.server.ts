@@ -70,7 +70,18 @@ const authGuard: Handle = async ({ event, resolve }) => {
 	event.locals.user = user;
 
 	// 현재 사용자의 역할 확인 (로그인하지 않은 경우 'guest')
-	const userRole = (user?.role || 'guest') as UserRole;
+	let userRole = 'guest' as UserRole;
+
+	if (session?.user) {
+		const { data: profile } = await event.locals.supabase
+			.from('profiles')
+			.select('role')
+			.eq('id', session.user.id)
+			.single();
+
+		userRole = (profile?.role || 'user') as UserRole;
+	}
+
 	const path = event.url.pathname;
 
 	// 현재 경로에 대한 접근 권한 확인
