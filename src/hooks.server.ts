@@ -3,6 +3,8 @@ import { type Handle, redirect } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
+import { isPathAllowed, getRedirectPath } from '$lib/config/routes';
+import type { UserRole } from '$lib/types/auth';
 
 const supabase: Handle = async ({ event, resolve }) => {
 	/**
@@ -67,12 +69,16 @@ const authGuard: Handle = async ({ event, resolve }) => {
 	event.locals.session = session;
 	event.locals.user = user;
 
-	if (!event.locals.session && event.url.pathname.startsWith('/private')) {
-		redirect(303, '/auth');
-	}
+	// 현재 사용자의 역할 확인 (로그인하지 않은 경우 'guest')
+	const userRole = (user?.role || 'guest') as UserRole;
+	const path = event.url.pathname;
 
-	if (event.locals.session && event.url.pathname === '/auth') {
-		redirect(303, '/private');
+	// 현재 경로에 대한 접근 권한 확인
+	if (!isPathAllowed(path, userRole)) {
+		const redirectPath = getRedirectPath(path, userRole);
+		if (redirectPath) {
+			redirect(303, redirectPath);
+		}
 	}
 
 	return resolve(event);
